@@ -1,20 +1,21 @@
+import copy
 import math
 import torch
-import stft_onnx
+from torch import nn
+from torch.nn import functional as F
+
 import commons
 import modules
 import attentions
 import monotonic_align
-import math
+import stft_onnx
 
-from torch import nn
-from torch.nn import functional as F
-from torch.nn import Conv1d, ConvTranspose1d, Conv2d
+from torch.nn import Conv1d, ConvTranspose1d, AvgPool1d, Conv2d
 from torch.nn.utils import weight_norm, remove_weight_norm, spectral_norm
 from commons import init_weights, get_padding
 from pqmf import PQMF
-from stft import TorchSTFT
-from stft import STFT
+from stft import TorchSTFT, STFT
+import math
 
 MAX_FRAMES = 5200
 
@@ -457,6 +458,7 @@ class Multistream_iSTFT_Generator(torch.nn.Module):
         self.multistream_conv_post.apply(init_weights)
 
 
+
     def forward(self, x, g=None):
       stft = TorchSTFT(filter_length=self.gen_istft_n_fft, hop_length=self.gen_istft_hop_size, win_length=self.gen_istft_n_fft).to(x.device)
       # pqmf = PQMF(x.device)
@@ -492,8 +494,7 @@ class Multistream_iSTFT_Generator(torch.nn.Module):
       y_mb_hat = torch.reshape(y_mb_hat, (x.shape[0], self.subbands, 1, y_mb_hat.shape[-1]))
       y_mb_hat = y_mb_hat.squeeze(-2)
 
-      y_mb_hat = F.conv_transpose1d(y_mb_hat, self.updown_filter.cpu() * self.subbands, stride=self.subbands)
-      #y_mb_hat = F.conv_transpose1d(y_mb_hat, self.updown_filter.cuda(x.device) * self.subbands, stride=self.subbands)
+      y_mb_hat = F.conv_transpose1d(y_mb_hat, self.updown_filter.to(x.device) * self.subbands, stride=self.subbands)
 
       y_g_hat = self.multistream_conv_post(y_mb_hat)
 
@@ -727,7 +728,6 @@ class SynthesizerTrn(nn.Module):
     z_slice, ids_slice = commons.rand_slice_segments(z, y_lengths, self.segment_size)
     o, o_mb = self.dec(z_slice, g=g)
     return o, o_mb, l_length, attn, ids_slice, x_mask, y_mask, (z, z_p, m_p, logs_p, m_q, logs_q)
-
 
   def infer(self, x, x_lengths, sid=None, noise_scale=1, length_scale=1, noise_scale_w=1., max_len=None):
     x, m_p, logs_p, x_mask = self.enc_p(x, x_lengths)
