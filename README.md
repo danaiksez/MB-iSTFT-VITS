@@ -62,6 +62,7 @@ Please note that to export to ONNX and run inference, additional packages must b
 
 - For ONNX export: ```torch==1.12.0```
 - For ONNX inference: ```onnxruntime==1.18.0```
+Additionally, please upgrade ```numpy==1.23.5```
 
 
 ## References

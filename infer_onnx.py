@@ -28,10 +28,16 @@ def main() -> None:
         "--output-wav-path", required=True, help="Path to write WAV file"
     )
     parser.add_argument("--text", required=True, type=str, help="Text to synthesize")
+    parser.add_argument("--device", required=True, type=str, help="Device to run onnx export", default="cpu")
     args = parser.parse_args()
 
     sess_options = onnxruntime.SessionOptions()
-    model = onnxruntime.InferenceSession(str(args.model), sess_options=sess_options, providers=["CPUExecutionProvider"])
+    
+    providers = ["CPUExecutionProvider"]
+    if args.device == "cuda":
+        providers.append("CUDAExecutionProvider")
+
+    model = onnxruntime.InferenceSession(str(args.model), sess_options=sess_options, providers=providers)
 
     hps = utils.get_hparams_from_file(args.config_path)
 

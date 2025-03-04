@@ -6,15 +6,14 @@ from models import SynthesizerTrn
 from text.symbols import symbols
 
 
-
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", required=True, help="Path to model (.onnx)")
+    parser.add_argument("--model", required=True, help="Path to model checkpoints")
     parser.add_argument(
         "--config-path", required=True, help="Path to model config (.json)"
     )
     parser.add_argument(
-        "--output-onnx-path", required=True, help="Path to write WAV file"
+        "--output-onnx-path", required=True, help="Path to write exported onnx model"
     )
     parser.add_argument("--device", required=True, type=str, help="Device to run onnx export", default="cpu")
     args = parser.parse_args()
@@ -37,7 +36,7 @@ def main() -> None:
         hps.train.segment_size // hps.data.hop_length,
         # n_speakers=hps.data.n_speakers, #- for multi speaker
         is_onnx=True,
-        **hps.model)
+        **hps.model).to(args.device)
 
     _ = utils.load_checkpoint(args.model, net_g, None)
 
@@ -58,7 +57,6 @@ def main() -> None:
 
         return audio
 
-
     with torch.no_grad():
         net_g.dec.remove_weight_norm()
         net_g.forward = infer_forward
@@ -68,12 +66,12 @@ def main() -> None:
     dummy_input_length = 50
     sequences = torch.randint(
         low=0, high=num_symbols, size=(1, dummy_input_length), dtype=torch.long
-    )
+    ).to(args.device)
     sequence_lengths = torch.LongTensor([sequences.size(1)]).to(args.device)
     sid = None
 
     # noise, noise_w, length
-    scales = torch.FloatTensor([0.667, 1.0, 0.8])
+    scales = torch.FloatTensor([0.667, 1.0, 0.8]).to(args.device)
     dummy_input = (sequences, sequence_lengths, scales, sid)
 
     # Export
