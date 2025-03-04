@@ -58,7 +58,7 @@ python infer_onnx.py --model {path_to_exported}.onnx --config-path config.json -
 ```
 
 
-Please note that to export to ONNX and run inference, additional packages must be installed. After setting up the environment as described above, install the following packages. This setup has been tested with Python 3.8:
+Please note that to export to ONNX and run inference, additional packages must be installed. After setting up the environment as described above, install the following packages. This setup has been tested with ```Python 3.8```:
 
 - For ONNX export: ```torch==1.12.0```
 - For ONNX inference: ```onnxruntime==1.18.0```
