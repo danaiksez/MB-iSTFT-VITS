@@ -49,7 +49,7 @@ After the training, you can check inference audio using [inference.ipynb](infere
 ### 4. Export to ONNX and Inference
 In order to export your trained checkpoints to ONNX, please run the following script:
 ```sh
-python export_onnx.py  --model {model_ckpt.pth} --config-path config.json --output-onnx-path {path_to_exported}.onnx --device 'cpu'
+python export_onnx.py  --model {model_ckpt}.pth --config-path config.json --output-onnx-path {path_to_exported}.onnx --device 'cpu'
 ```
 
 Afterwards, you can use the exported onnx model to run inference as follows:
